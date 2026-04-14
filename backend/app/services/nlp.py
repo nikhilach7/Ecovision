@@ -1,48 +1,68 @@
-from datetime import datetime, timezone
+import asyncio
+import google.generativeai as genai
+from app.core.config import settings
 
-from app.services.analytics import day_bounds
+SYSTEM_PROMPT = """
+You are an AI-powered Smart Waste Management Assistant designed specifically for a Smart Waste Segregation and Monitoring System.
 
+Your role is to help municipal authorities, waste management staff, and users understand waste data, segregation, trends, and system insights.
+
+You MUST ONLY answer questions related to:
+
+* Waste segregation (plastic, organic, metal, glass, etc.)
+* Smart bins and IoT-based waste monitoring
+* Waste collection trends and analytics
+* Recycling insights and environmental impact
+* Fill-level status and bin usage
+* City waste statistics and reports
+* Predictions about waste generation
+* Alerts and anomalies in waste collection
+
+DO NOT answer unrelated general knowledge questions.
+
+CRITICAL FORMATTING RULES:
+* Use clear headings with **bold** text for main categories
+* Use bullet points with proper spacing between items
+* Add blank lines between sections for readability
+* Use consistent indentation for sub-points
+* Keep sentences concise and easy to read
+* Use examples to illustrate points clearly
+* Structure information logically with main points first
+* IMPORTANT: Use proper line breaks and spacing - don't let text run together
+* Each bullet point should be on a separate line
+* Add double line breaks between main sections
+
+Example format:
+**Main Category:**
+* **Sub-category:** Brief description
+  * **Examples:** List specific items
+  * **Smart Insight:** Explain system integration
+
+* **Another Sub-category:** Brief description
+  * **Examples:** List specific items
+  * **Smart Insight:** Explain system integration
+
+**System Integration:**
+Provide overall system insights and IoT connections here.
+
+If data missing, simulate realistic insights. Stay domain-specific.
+"""
 
 class NLPService:
-    async def answer(self, db, query: str) -> tuple[str, str]:
-        text = query.lower().strip()
-        start, end = day_bounds(datetime.now(timezone.utc))
-
-        if "plastic" in text and ("today" in text or "how much" in text):
-            count = await db.waste_predictions.count_documents(
-                {"waste_type": "plastic", "created_at": {"$gte": start, "$lt": end}}
-            )
-            return f"Plastic waste items detected today: {count}.", "plastic_today"
-
-        if "metal" in text and ("today" in text or "how much" in text):
-            count = await db.waste_predictions.count_documents(
-                {"waste_type": "metal", "created_at": {"$gte": start, "$lt": end}}
-            )
-            return f"Metal waste items detected today: {count}.", "metal_today"
-
-        if "organic" in text and ("today" in text or "how much" in text):
-            count = await db.waste_predictions.count_documents(
-                {"waste_type": "organic", "created_at": {"$gte": start, "$lt": end}}
-            )
-            return f"Organic waste items detected today: {count}.", "organic_today"
-
-        if "bin" in text and ("full" in text or "fill" in text):
-            latest = await db.sensor_readings.find_one(sort=[("created_at", -1)])
-            if not latest:
-                return "No sensor reading is available yet.", "bin_status"
-            fill = latest.get("fill_percentage", 0)
-            if fill > 90:
-                return f"Yes. Bin is full at {fill:.1f}%.", "bin_status"
-            return f"Bin fill level is {fill:.1f}%.", "bin_status"
-
-        if "total" in text and "waste" in text:
-            total = await db.waste_predictions.count_documents({})
-            return f"Total classified waste items: {total}.", "total_waste"
-
-        return (
-            "Try asking: 'How much plastic waste today?' or 'Is the bin full?'",
-            "fallback",
+    def __init__(self):
+        genai.configure(api_key=settings.gemini_api_key)
+        self.model = genai.GenerativeModel(
+            model_name="gemini-flash-latest",
+            system_instruction=SYSTEM_PROMPT
         )
+
+    async def answer(self, db, query: str) -> tuple[str, str]:
+        try:
+            response = await asyncio.to_thread(self.model.generate_content, query)
+            reply = response.text.strip()
+            return reply, "chatbot"
+        except Exception as e:
+            return "I'm sorry, I couldn't process your query right now. Please try again later.", "error"
 
 
 nlp_service = NLPService()
