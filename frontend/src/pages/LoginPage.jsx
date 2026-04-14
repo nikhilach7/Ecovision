@@ -24,7 +24,7 @@ export default function LoginPage({ onLogin }) {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-10">
-      <div className="grid w-full overflow-hidden rounded-3xl bg-white/95 shadow-panel md:grid-cols-2">
+      <div className="grid w-full overflow-hidden rounded-3xl panel md:grid-cols-2">
         <div className="bg-[linear-gradient(145deg,#0f3d23,#1d6d3f)] p-8 text-white md:p-12">
           <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm">
             <Leaf size={16} /> EcoVision AI
@@ -36,19 +36,19 @@ export default function LoginPage({ onLogin }) {
         </div>
 
         <div className="p-8 md:p-12">
-          <h2 className="font-title text-2xl font-bold text-slate-800">Dashboard Login</h2>
-          <p className="mt-2 text-sm text-slate-500">Authenticated access for operators and municipal teams.</p>
-          <div className="mt-6 inline-flex rounded-xl bg-slate-100 p-1 text-sm">
+          <h2 className="font-title text-2xl font-bold text-[var(--text-main)]">Dashboard Login</h2>
+          <p className="mt-2 text-sm text-[var(--text-soft)]">Authenticated access for operators and municipal teams.</p>
+          <div className="mt-6 inline-flex rounded-xl bg-[var(--soft-panel)] p-1 text-sm">
             <button
               type="button"
-              className={`rounded-lg px-4 py-2 ${mode === "login" ? "bg-white shadow" : "text-slate-600"}`}
+              className={`rounded-lg px-4 py-2 ${mode === "login" ? "bg-[var(--panel)] shadow" : "text-[var(--text-soft)]"}`}
               onClick={() => setMode("login")}
             >
               Sign In
             </button>
             <button
               type="button"
-              className={`rounded-lg px-4 py-2 ${mode === "register" ? "bg-white shadow" : "text-slate-600"}`}
+              className={`rounded-lg px-4 py-2 ${mode === "register" ? "bg-[var(--panel)] shadow" : "text-[var(--text-soft)]"}`}
               onClick={() => setMode("register")}
             >
               Create Account
@@ -57,7 +57,7 @@ export default function LoginPage({ onLogin }) {
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             {mode === "register" && (
               <input
-                className="w-full rounded-xl border border-slate-200 p-3"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--soft-panel)] p-3 text-[var(--text-main)]"
                 placeholder="Full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -65,14 +65,14 @@ export default function LoginPage({ onLogin }) {
               />
             )}
             <input
-              className="w-full rounded-xl border border-slate-200 p-3"
+              className="w-full rounded-xl border border-[var(--line)] bg-[var(--soft-panel)] p-3 text-[var(--text-main)]"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
             <input
-              className="w-full rounded-xl border border-slate-200 p-3"
+              className="w-full rounded-xl border border-[var(--line)] bg-[var(--soft-panel)] p-3 text-[var(--text-main)]"
               type="password"
               placeholder="Password"
               value={password}

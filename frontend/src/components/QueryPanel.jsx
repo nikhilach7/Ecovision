@@ -23,15 +23,15 @@ export default function QueryPanel() {
   };
 
   return (
-    <div className="rounded-2xl bg-white/95 p-6 shadow-panel">
+    <div className="panel p-6">
       <div className="mb-4 flex items-center gap-2">
         <Bot className="text-cyan-700" size={20} />
-        <h3 className="font-title text-xl font-semibold text-slate-800">NLP Query Console</h3>
+        <h3 className="font-title text-xl font-semibold text-[var(--text-main)]">NLP Query Console</h3>
       </div>
 
       <form onSubmit={handleAsk} className="flex gap-2">
         <input
-          className="flex-1 rounded-xl border border-slate-200 p-3 text-sm"
+          className="flex-1 rounded-xl border border-[var(--line)] bg-[var(--soft-panel)] p-3 text-sm text-[var(--text-main)]"
           placeholder='Try: "How much plastic waste today?"'
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -41,7 +41,9 @@ export default function QueryPanel() {
         </button>
       </form>
 
-      <div className="mt-4 rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{loading ? "Thinking..." : answer}</div>
+      <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--soft-panel)] p-3 text-sm text-[var(--text-soft)]">
+        {loading ? "Thinking..." : answer}
+      </div>
     </div>
   );
 }

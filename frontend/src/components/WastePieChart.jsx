@@ -10,8 +10,8 @@ export default function WastePieChart({ distribution }) {
   ];
 
   return (
-    <div className="rounded-2xl bg-white/95 p-6 shadow-panel">
-      <h3 className="mb-4 font-title text-xl font-semibold text-slate-800">Waste Distribution</h3>
+    <div className="panel p-6">
+      <h3 className="mb-4 font-title text-xl font-semibold text-[var(--text-main)]">Waste Distribution</h3>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -24,9 +24,9 @@ export default function WastePieChart({ distribution }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs text-slate-600">
+      <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs text-[var(--text-soft)]">
         {data.map((item, idx) => (
-          <div key={item.name} className="rounded-lg bg-slate-100 px-2 py-1">
+          <div key={item.name} className="rounded-lg border border-[var(--line)] bg-[var(--soft-panel)] px-2 py-1">
             <span className="inline-flex items-center gap-1">
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[idx] }} />
               {item.name}: {item.value}

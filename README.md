@@ -72,6 +72,51 @@ python scripts/generate_sample_dataset.py
 python scripts/train_model.py
 ```
 
+### Preferred: Use a TrashNet-style dataset
+If you want a more realistic training dataset, download TrashNet directly from Hugging Face and convert it into the raw folder used by this project.
+
+Direct download command:
+```powershell
+python scripts/download_trashnet_hf.py
+```
+
+This script uses Hugging Face streaming and saves a balanced subset per class, so it does not need to download the full 3.4 GB dataset.
+
+This creates the raw folder here:
+```text
+backend/data/trashnet_raw/
+```
+
+Then prepare the compact 3-class dataset used by this project:
+```powershell
+python scripts/prepare_trashnet_dataset.py
+python scripts/train_model.py
+```
+
+The project maps the raw dataset into these final classes:
+- plastic -> plastic
+- metal -> metal
+- paper/cardboard/trash -> organic
+
+If you want to use the exact Hugging Face API snippet, it is:
+```python
+from datasets import load_dataset
+
+ds = load_dataset("garythung/trashnet")
+```
+
+If you do not have a real dataset yet, the synthetic generator still works as a fallback.
+
+### No-Dataset Option (Fastest)
+You can run the app without downloading any dataset.
+
+If `backend/model/waste_classifier.keras` is missing, the backend automatically uses an ImageNet-pretrained MobileNetV2 inference fallback and maps predictions to:
+- plastic
+- metal
+- organic
+
+So you can continue development/demo immediately, then train a project-specific model later.
+
 ### 4. Run Backend
 ```powershell
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
