@@ -27,10 +27,10 @@ export default function UploadPanel({ onUploaded }) {
   };
 
   return (
-    <div className="rounded-2xl bg-white/95 p-6 shadow-panel">
+    <div className="panel p-6">
       <div className="mb-4 flex items-center gap-2">
         <Camera className="text-emerald-600" size={20} />
-        <h3 className="font-title text-xl font-semibold text-slate-800">Image Classification</h3>
+        <h3 className="font-title text-xl font-semibold text-[var(--text-main)]">Image Classification</h3>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -38,14 +38,14 @@ export default function UploadPanel({ onUploaded }) {
           type="file"
           accept="image/*"
           onChange={(e) => setFile(e.target.files?.[0] || null)}
-          className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+          className="w-full rounded-xl border border-[var(--line)] bg-[var(--soft-panel)] p-3 text-sm text-[var(--text-main)]"
         />
         <input
           type="text"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           placeholder="Bin location"
-          className="w-full rounded-xl border border-slate-200 p-3 text-sm"
+          className="w-full rounded-xl border border-[var(--line)] bg-[var(--soft-panel)] p-3 text-sm text-[var(--text-main)]"
         />
         <button
           disabled={!file || loading}
@@ -59,7 +59,7 @@ export default function UploadPanel({ onUploaded }) {
       {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
 
       {prediction && (
-        <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-800">
+        <div className="mt-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm text-emerald-300">
           <p>
             Predicted Type: <strong>{prediction.waste_type}</strong>
           </p>

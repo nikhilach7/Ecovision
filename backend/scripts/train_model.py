@@ -5,7 +5,8 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = ROOT / "data" / "sample_dataset"
+TRASHNET_DATA_DIR = ROOT / "data" / "trashnet_compact"
+SAMPLE_DATA_DIR = ROOT / "data" / "sample_dataset"
 MODEL_DIR = ROOT / "model"
 MODEL_PATH = MODEL_DIR / "waste_classifier.keras"
 IMG_SIZE = (128, 128)
@@ -31,11 +32,16 @@ def build_model() -> Sequential:
 
 
 def main() -> None:
-    if not DATA_DIR.exists():
-        raise FileNotFoundError(f"Dataset not found: {DATA_DIR}")
+    data_dir = TRASHNET_DATA_DIR if TRASHNET_DATA_DIR.exists() else SAMPLE_DATA_DIR
+    if not data_dir.exists():
+        raise FileNotFoundError(
+            f"Dataset not found: {TRASHNET_DATA_DIR} or {SAMPLE_DATA_DIR}"
+        )
+
+    print(f"Training from dataset: {data_dir}")
 
     train_ds = tf.keras.utils.image_dataset_from_directory(
-        DATA_DIR,
+        data_dir,
         labels="inferred",
         label_mode="categorical",
         image_size=IMG_SIZE,
@@ -46,7 +52,7 @@ def main() -> None:
     )
 
     val_ds = tf.keras.utils.image_dataset_from_directory(
-        DATA_DIR,
+        data_dir,
         labels="inferred",
         label_mode="categorical",
         image_size=IMG_SIZE,

@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
-import { Activity, Cloud, Database, HardDrive, Recycle } from "lucide-react";
-import FillLevelCard from "./components/FillLevelCard";
-import HeaderBar from "./components/HeaderBar";
-import QueryPanel from "./components/QueryPanel";
-import StatCard from "./components/StatCard";
-import TrendLineChart from "./components/TrendLineChart";
-import UploadPanel from "./components/UploadPanel";
-import WastePieChart from "./components/WastePieChart";
+import TopNavbar from "./components/TopNavbar";
 import LoginPage from "./pages/LoginPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import ClassificationPage from "./pages/ClassificationPage";
+import HomePage from "./pages/HomePage";
+import MonitoringPage from "./pages/MonitoringPage";
 import { clearAuthToken, fetchDashboard, getAuthToken, getCurrentUser, login, register, setAuthToken } from "./services/api";
 import { mockDashboard } from "./utils/mockData";
 
 export default function App() {
+  const [activePage, setActivePage] = useState("home");
   const [authenticated, setAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [dashboard, setDashboard] = useState(mockDashboard);
   const [offlineMode, setOfflineMode] = useState(true);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("ecovision-theme") || "dark";
+  });
 
   const handleAuth = async ({ mode, fullName, email, password }) => {
     const response =
@@ -29,6 +30,14 @@ export default function App() {
     clearAuthToken();
     setAuthenticated(false);
     setUser(null);
+    setActivePage("home");
+  };
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("ecovision-theme", newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
   };
 
   const loadDashboard = async () => {
@@ -58,6 +67,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
     if (!authenticated) return;
     loadDashboard();
     const timer = setInterval(loadDashboard, 8000);
@@ -68,77 +81,55 @@ export default function App() {
     return <LoginPage onLogin={handleAuth} />;
   }
 
+  const renderPage = () => {
+    if (activePage === "analytics") {
+      return <AnalyticsPage dashboard={dashboard} />;
+    }
+
+    if (activePage === "monitoring") {
+      return <MonitoringPage dashboard={dashboard} />;
+    }
+
+    if (activePage === "classification") {
+      return <ClassificationPage dashboard={dashboard} onUploaded={loadDashboard} />;
+    }
+
+    return <HomePage dashboard={dashboard} offlineMode={offlineMode} />;
+  };
+
   return (
-    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-6 md:px-8">
-      <HeaderBar
-        location={dashboard.latest_location}
-        full={dashboard.is_bin_full}
-        userName={user?.full_name || "Operator"}
-        onLogout={handleLogout}
-      />
+    <main className="min-h-screen w-full bg-[var(--bg-main)] text-[var(--text-main)]">
+      <div className="flex min-h-screen flex-col">
+        <TopNavbar
+          userName={user?.full_name || "Operator"}
+          offlineMode={offlineMode}
+          location={dashboard.latest_location}
+          onLogout={handleLogout}
+          onThemeToggle={toggleTheme}
+          theme={theme}
+          activePage={activePage}
+          onNavigate={setActivePage}
+        />
 
-      {offlineMode && (
-        <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-          Backend/hardware not reachable. Showing demo fallback data.
-        </div>
-      )}
+        <div className="flex-1 px-4 py-5 md:px-6 md:py-6 xl:px-8">
+          <div className="mx-auto w-full max-w-[1400px]">
+            {offlineMode && (
+              <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
+                Backend/hardware not reachable. Showing demo fallback data.
+              </div>
+            )}
 
-      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Total Waste"
-          value={dashboard.total_waste_items}
-          subtitle="Classified waste images"
-          icon={Recycle}
-          tone="green"
-        />
-        <StatCard
-          title="Active Data Feed"
-          value={offlineMode ? "Simulated" : "Live"}
-          subtitle="Sensor + AI pipeline status"
-          icon={Activity}
-          tone="blue"
-        />
-        <StatCard
-          title="Database"
-          value={dashboard.cloud_provider || "MongoDB"}
-          subtitle="Cloud database and telemetry logs"
-          icon={Database}
-          tone="amber"
-        />
-        <StatCard
-          title="Cloud Storage"
-          value={dashboard.storage_backend === "gridfs" ? `${dashboard.cloud_storage_mb} MB` : "Local"}
-          subtitle={
-            dashboard.storage_backend === "gridfs"
-              ? `${dashboard.cloud_images_count} images synced to cloud`
-              : "Switch STORAGE_BACKEND to gridfs"
-          }
-          icon={Cloud}
-          tone="blue"
-        />
-        <StatCard
-          title="Storage Mode"
-          value={dashboard.storage_backend?.toUpperCase() || "LOCAL"}
-          subtitle="Atlas GridFS recommended for free cloud demos"
-          icon={HardDrive}
-          tone="green"
-        />
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <div className="grid gap-4 md:grid-cols-2">
-            <WastePieChart distribution={dashboard.distribution} />
-            <FillLevelCard fill={dashboard.latest_fill_percentage} location={dashboard.latest_location} />
+            {renderPage()}
           </div>
-          <TrendLineChart trend={dashboard.daily_trend} />
         </div>
 
-        <div className="space-y-4">
-          <UploadPanel onUploaded={loadDashboard} />
-          <QueryPanel />
-        </div>
-      </section>
+        <footer className="border-t border-[var(--line)] bg-[var(--topbar-bg)]/88 px-4 py-3 text-sm text-[var(--text-soft)] md:px-6">
+          <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-2">
+            <span>EcoVision AI</span>
+            <span className="text-xs text-[var(--text-muted)]">Smart waste monitoring and classification dashboard</span>
+          </div>
+        </footer>
+      </div>
     </main>
   );
 }
