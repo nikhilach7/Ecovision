@@ -61,8 +61,9 @@ export default function UploadPanel({ onUploaded }) {
       {prediction && (
         <div className="mt-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm text-emerald-300">
           <p>
-            Predicted Type: <strong>{prediction.waste_type}</strong>
+            Predicted Label: <strong>{prediction.predicted_label || prediction.waste_type}</strong>
           </p>
+          <p>Waste Bin: {prediction.waste_type}</p>
           <p>Confidence: {(prediction.confidence * 100).toFixed(1)}%</p>
           <p>Location: {prediction.location}</p>
         </div>

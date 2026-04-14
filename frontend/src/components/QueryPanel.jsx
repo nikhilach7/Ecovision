@@ -16,7 +16,7 @@ export default function QueryPanel() {
       const response = await askQuery(query);
       setAnswer(response.answer);
     } catch {
-      setAnswer("NLP service is temporarily unavailable.");
+      setAnswer("chat bot service is temporarily unavailable.");
     } finally {
       setLoading(false);
     }
