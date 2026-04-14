@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 WasteType = Literal["plastic", "metal", "organic"]
+TrashNetLabel = Literal["glass", "paper", "cardboard", "plastic", "metal", "trash"]
 
 
 class SensorPayload(BaseModel):
@@ -23,6 +24,7 @@ class SensorRecord(BaseModel):
 
 class PredictionResponse(BaseModel):
     waste_type: WasteType
+    predicted_label: TrashNetLabel | Literal["unknown"]
     confidence: float
     location: str
     filename: str

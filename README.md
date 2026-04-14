@@ -73,7 +73,7 @@ python scripts/train_model.py
 ```
 
 ### Preferred: Use a TrashNet-style dataset
-If you want a more realistic training dataset, download TrashNet directly from Hugging Face and convert it into the raw folder used by this project.
+If you want a more realistic training dataset, download TrashNet directly from Hugging Face and keep the native TrashNet labels for transfer learning.
 
 Direct download command:
 ```powershell
@@ -87,16 +87,24 @@ This creates the raw folder here:
 backend/data/trashnet_raw/
 ```
 
-Then prepare the compact 3-class dataset used by this project:
+Then prepare the compact dataset used by this project:
 ```powershell
 python scripts/prepare_trashnet_dataset.py
 python scripts/train_model.py
 ```
 
-The project maps the raw dataset into these final classes:
+The model now uses MobileNetV2 transfer learning and learns the six TrashNet classes:
+- glass
+- paper
+- cardboard
+- plastic
+- metal
+- trash
+
+For the dashboard and alerts, the backend maps those labels into the project bins:
 - plastic -> plastic
 - metal -> metal
-- paper/cardboard/trash -> organic
+- glass, paper, cardboard, trash -> organic
 
 If you want to use the exact Hugging Face API snippet, it is:
 ```python

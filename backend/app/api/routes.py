@@ -1,5 +1,6 @@
 from collections import Counter
 from datetime import datetime, timezone
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -12,10 +13,12 @@ from app.services.analytics import clamp_fill_percentage, day_bounds
 from app.services.classifier import classifier
 from app.services.cloud_storage import upload_image_to_gridfs
 from app.services.nlp import nlp_service
+from app.services.thingspeak import build_thingspeak_payload, send_to_thingspeak, should_send_to_thingspeak
 
 router = APIRouter()
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+logger = logging.getLogger(__name__)
 
 
 @router.get("/health")
@@ -31,6 +34,8 @@ async def health_check():
 @router.post("/sensor", response_model=SensorRecord)
 async def ingest_sensor(payload: SensorPayload, db=Depends(get_database)):
     fill_percentage = clamp_fill_percentage(payload.distance_cm, payload.max_depth_cm)
+    waste_level = round(100.0 - fill_percentage, 2)
+    bin_status = 1 if fill_percentage > 90 else 0
     doc = {
         "bin_id": payload.bin_id,
         "distance_cm": payload.distance_cm,
@@ -39,6 +44,26 @@ async def ingest_sensor(payload: SensorPayload, db=Depends(get_database)):
         "created_at": datetime.now(timezone.utc),
     }
     await db.sensor_readings.insert_one(doc)
+
+    if settings.thingspeak_is_enabled:
+        ts_payload = build_thingspeak_payload(
+            fill_level=fill_percentage,
+            waste_level=waste_level,
+            distance_cm=payload.distance_cm,
+            bin_status=bin_status,
+        )
+        if not should_send_to_thingspeak(settings.thingspeak_api_key, settings.thingspeak_min_interval_seconds):
+            logger.debug("ThingSpeak skipped by rate limit for bin_id=%s", payload.bin_id)
+            return SensorRecord(**doc)
+
+        try:
+            ok = send_to_thingspeak(settings.thingspeak_api_key, ts_payload)
+            if not ok:
+                logger.warning("ThingSpeak update failed for bin_id=%s", payload.bin_id)
+        except Exception:
+            # Keep sensor ingestion available even if ThingSpeak is temporarily unavailable.
+            logger.exception("ThingSpeak exception for bin_id=%s", payload.bin_id)
+
     return SensorRecord(**doc)
 
 
@@ -64,7 +89,7 @@ async def predict_waste(
     with save_path.open("wb") as buffer:
         buffer.write(file_bytes)
 
-    waste_type, confidence = classifier.predict_image(str(save_path))
+    predicted_label, waste_type, confidence = classifier.predict_image(str(save_path))
 
     cloud_file_id = None
     cloud_url = None
@@ -80,6 +105,7 @@ async def predict_waste(
 
     record = {
         "filename": save_path.name,
+        "predicted_label": predicted_label,
         "waste_type": waste_type,
         "confidence": confidence,
         "location": location,
@@ -96,6 +122,7 @@ async def predict_waste(
         save_path.unlink()
 
     return PredictionResponse(
+        predicted_label=predicted_label,
         waste_type=waste_type,
         confidence=confidence,
         location=location,

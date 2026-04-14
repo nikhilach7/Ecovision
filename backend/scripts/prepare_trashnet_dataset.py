@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "trashnet_raw"
 OUT_DIR = ROOT / "data" / "trashnet_compact"
 TARGET_CLASSES = {
+    "glass": ["glass"],
+    "paper": ["paper"],
+    "cardboard": ["cardboard"],
     "plastic": ["plastic"],
     "metal": ["metal"],
-    "organic": ["paper", "cardboard", "trash"],
+    "trash": ["trash"],
 }
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
@@ -48,7 +51,7 @@ def main() -> None:
         )
 
     print(f"Prepared compact dataset at: {OUT_DIR}")
-    print("Class mapping: plastic -> plastic, metal -> metal, paper/cardboard/trash -> organic")
+    print("Class mapping: glass, paper, cardboard, plastic, metal, trash")
 
 
 if __name__ == "__main__":
