@@ -2,6 +2,7 @@
 
 Smart Waste Segregation and Monitoring System with:
 - IoT sensor ingestion (Arduino HC-SR04 or simulator)
+- ThingSpeak IoT dashboard support for field1-field4 charts
 - AI waste image classification (plastic, metal, organic)
 - FastAPI backend + MongoDB
 - React dashboard with analytics
@@ -24,6 +25,23 @@ Smart Waste Segregation and Monitoring System with:
 Use any one option:
 - Local MongoDB service running on mongodb://localhost:27017
 - MongoDB Atlas URI in backend/.env
+
+### 1B. Optional: Configure ThingSpeak for IoT charts
+If you want the IoT charts like in your screenshot, enable ThingSpeak in `backend/.env`:
+```env
+THINGSPEAK_ENABLED=true
+THINGSPEAK_API_KEY=your_thingspeak_write_api_key
+```
+
+Field mapping used by the project:
+- field1 = fill level
+- field2 = waste level
+- field3 = distance
+- field4 = bin status
+
+The simulator and serial bridge will send the same sensor readings to:
+- your FastAPI backend
+- ThingSpeak
 
 ### 2. Backend Setup
 ```powershell
@@ -67,6 +85,8 @@ cd backend
 python scripts/sensor_simulator.py
 ```
 
+If ThingSpeak is enabled, the simulator also updates the ThingSpeak channel fields.
+
 ### 6. Frontend Setup
 Open another terminal:
 ```powershell
@@ -104,6 +124,8 @@ docker compose exec backend python scripts/train_model.py
 docker compose exec backend python scripts/sensor_simulator.py
 ```
 
+If ThingSpeak is enabled in the container env, field1-field4 are updated there too.
+
 ### 5. Open App
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8000/api
@@ -136,6 +158,7 @@ docker compose up --build -d backend frontend
 3. Check dashboard charts and cloud cards.
 4. Ask NLP queries (example: How much plastic waste today?).
 5. Watch bin-full alerts when fill level exceeds 90%.
+6. If ThingSpeak is enabled, confirm live field1-field4 charts in ThingSpeak.
 
 ## Useful Commands
 ```powershell

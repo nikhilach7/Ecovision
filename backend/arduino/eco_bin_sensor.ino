@@ -4,6 +4,12 @@ const int echoPin = 10;
 long duration;
 float distanceCm;
 
+// ThingSpeak field mapping for EcoVision AI:
+// field1 = fill level
+// field2 = waste level
+// field3 = distance
+// field4 = bin status
+
 void setup() {
   Serial.begin(9600);
   pinMode(trigPin, OUTPUT);

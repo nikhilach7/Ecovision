@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     storage_backend: str = "local"
+    thingspeak_api_key: str = ""
+    thingspeak_enabled: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
@@ -24,6 +26,10 @@ class Settings(BaseSettings):
         if self.mongodb_uri.startswith("mongodb+srv://"):
             return "MongoDB Atlas (Free Tier)"
         return "Local MongoDB"
+
+    @property
+    def thingspeak_is_enabled(self) -> bool:
+        return self.thingspeak_enabled and bool(self.thingspeak_api_key.strip())
 
 
 settings = Settings()
