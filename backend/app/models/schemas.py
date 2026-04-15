@@ -24,7 +24,7 @@ class SensorRecord(BaseModel):
 
 class PredictionResponse(BaseModel):
     waste_type: WasteType
-    predicted_label: TrashNetLabel | Literal["unknown"]
+    predicted_label: TrashNetLabel | WasteType | Literal["unknown"]
     confidence: float
     location: str
     filename: str

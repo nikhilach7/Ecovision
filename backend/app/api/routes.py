@@ -91,6 +91,17 @@ async def predict_waste(
 
     predicted_label, waste_type, confidence = classifier.predict_image(str(save_path))
 
+    if confidence < settings.confidence_threshold:
+        logger.info(
+            "Low-confidence prediction fallback for file=%s confidence=%.4f threshold=%.4f",
+            save_path.name,
+            confidence,
+            settings.confidence_threshold,
+        )
+        predicted_label = "unknown"
+        # Keep dashboard categories stable while avoiding uncertain hard labels.
+        waste_type = "organic"
+
     cloud_file_id = None
     cloud_url = None
     if settings.storage_backend == "gridfs":

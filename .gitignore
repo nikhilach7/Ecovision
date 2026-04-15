@@ -4,13 +4,19 @@ __pycache__/
 .venv/
 venv/
 backend/.env
-backend/uploads/
-backend/model/
 
 # Node
 node_modules/
 frontend/node_modules/
 frontend/dist/
+
+# Generated data and runtime files
+backend/data/**/*.jpg
+backend/data/**/*.jpeg
+backend/data/**/*.png
+backend/data/**/*.bmp
+backend/data/**/*.webp
+backend/uploads/
 
 # OS
 .DS_Store

@@ -1,0 +1,23 @@
+{
+  "class_names": [
+    "metal",
+    "organic",
+    "plastic"
+  ],
+  "bin_mapping": {
+    "metal": "metal",
+    "organic": "organic",
+    "plastic": "plastic"
+  },
+  "image_size": [
+    224,
+    224
+  ],
+  "model_artifacts": {
+    "keras": "waste_classifier.keras",
+    "saved_model": "saved_model",
+    "tflite": "waste_classifier.tflite"
+  },
+  "preprocessing": "mobilenet_v2_preprocess_input",
+  "seed": 42
+}
