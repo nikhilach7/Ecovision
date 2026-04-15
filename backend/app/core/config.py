@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     app_name: str = "EcoVision AI Backend"
     mongodb_uri: str = "mongodb://localhost:27017"
     mongodb_db: str = "ecovision"
-    model_path: str = "./model/waste_classifier.keras"
+    model_path: str = "./model/waste_classifier.tflite"
     confidence_threshold: float = 0.45
     cors_origins: str = "http://localhost:5173"
     jwt_secret: str = "change-this-in-production"

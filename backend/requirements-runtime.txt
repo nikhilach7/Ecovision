@@ -1,0 +1,14 @@
+fastapi==0.115.0
+uvicorn==0.30.6
+python-multipart==0.0.9
+motor==3.6.0
+pydantic-settings==2.5.2
+numpy==1.26.4
+Pillow==10.4.0
+requests==2.32.3
+python-dotenv==1.0.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
+groq==0.18.0
+tflite-runtime==2.14.0

@@ -9,13 +9,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel
+
+COPY requirements-runtime.txt .
+RUN pip install --no-cache-dir --prefer-binary -r requirements-runtime.txt
 
 COPY app ./app
-COPY scripts ./scripts
-COPY arduino ./arduino
-COPY data ./data
+COPY model ./model
 
 RUN mkdir -p /app/uploads /app/model
 
