@@ -19,16 +19,20 @@ export default function MonitoringPage({ dashboard }) {
           tone="blue"
         />
         <StatCard
-          title="Cloud Storage"
-          value={dashboard.storage_backend === "gridfs" ? `${dashboard.cloud_storage_mb} MB` : "Local"}
-          subtitle={dashboard.storage_backend === "gridfs" ? `${dashboard.cloud_images_count} images synced` : "Switch STORAGE_BACKEND to gridfs"}
+          title="Database"
+          value={dashboard.cloud_provider || "Local MongoDB"}
+          subtitle="MongoDB connection target"
           icon={Cloud}
           tone="amber"
         />
         <StatCard
           title="Storage Mode"
           value={dashboard.storage_backend?.toUpperCase() || "LOCAL"}
-          subtitle="Current image retention strategy"
+          subtitle={
+            dashboard.storage_backend === "gridfs"
+              ? `${dashboard.cloud_images_count} images • ${dashboard.cloud_storage_mb} MB`
+              : "Local uploads"
+          }
           icon={HardDrive}
           tone="green"
         />
