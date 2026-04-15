@@ -37,7 +37,7 @@ export default function IoTCards({ latest, summary, loading, error }) {
         </div>
       )}
       <div className="grid gap-4 md:grid-cols-4">
-        <StatCard title="Total Waste" value={`${Math.round(safeSummary.totalWaste * 100) / 100}`} subtitle="Sum of last 20 readings" icon={BarChart3} tone="green" />
+        <StatCard title="Total Waste" value={`${Math.round(safeSummary.totalWaste * 100) / 100}`} subtitle="ThingSpeak entries" icon={BarChart3} tone="green" />
         <StatCard title="Fill Level" value={`${Math.round(safeLatest.fillLevel)}%`} subtitle="ThingSpeak field1" icon={Gauge} tone="blue" />
         <StatCard title="Bin Status" value={toBinStatus(safeLatest.binStatus)} subtitle="ThingSpeak field2" icon={Trash2} tone="amber" />
         <StatCard title="Waste Level" value={`${Math.round(safeSummary.wasteLevelLatest)}%`} subtitle="ThingSpeak field4" icon={BarChart3} tone="green" />

@@ -8,7 +8,13 @@ export function toNumber(value, fallback = 0) {
 
 export function toBinStatus(value) {
   const status = toNumber(value, 0);
-  return status >= 1 ? "Full 🚨" : "Normal 🟢";
+  if (status >= 2) {
+    return "Full 🚨";
+  }
+  if (status >= 1) {
+    return "Almost Full ⚠️";
+  }
+  return "Normal 🟢";
 }
 
 export function hasThingSpeakConfig() {

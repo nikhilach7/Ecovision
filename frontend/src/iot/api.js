@@ -1,4 +1,4 @@
-import { mapFeedPoint, mapLatestFeed, toNumber, toBinStatus } from "./utils";
+import { mapFeedPoint, mapLatestFeed, resolveFieldMap, toNumber, toBinStatus } from "./utils";
 
 const BASE_URL = "https://api.thingspeak.com/channels";
 const CACHE_TTL_MS = 5000;
@@ -7,7 +7,7 @@ let cachedSnapshot = null;
 let cachedAt = 0;
 let inFlightPromise = null;
 
-function getLastValidFeed(feeds) {
+function getLastValidFeed(feeds, fieldMap) {
   if (!Array.isArray(feeds) || feeds.length === 0) {
     return null;
   }
@@ -18,12 +18,21 @@ function getLastValidFeed(feeds) {
       continue;
     }
 
-    const fill = Number(f.field1);
-    const waste = Number(f.field4);
-    const distance = Number(f.field3);
+    const fill = Number(f?.[fieldMap.fillLevel]);
+    const status = Number(f?.[fieldMap.binStatus]);
+    const waste = Number(f?.[fieldMap.wasteLevel]);
+    const distance = Number(f?.[fieldMap.distance]);
 
     // Define valid condition:
-    const isValid = !Number.isNaN(fill) && fill > 0 && !Number.isNaN(waste) && waste >= 0 && !Number.isNaN(distance);
+    const isValid =
+      !Number.isNaN(fill) &&
+      fill >= 0 &&
+      !Number.isNaN(status) &&
+      status >= 0 &&
+      !Number.isNaN(waste) &&
+      waste >= 0 &&
+      !Number.isNaN(distance) &&
+      distance >= 0;
 
     if (isValid) {
       return f;
@@ -57,9 +66,9 @@ async function getJson(url) {
   return response.json();
 }
 
-function computeSummaryFromHistory(history, latest) {
+function computeSummaryFromHistory(history, latest, entriesCount) {
   const wasteReadings = history.map((p) => toNumber(p?.wasteLevel, 0));
-  const totalWaste = wasteReadings.reduce((sum, v) => sum + v, 0);
+  const totalWaste = toNumber(entriesCount, history?.length ?? 0);
 
   const last10 = wasteReadings.slice(-10);
   const avgLast10 =
@@ -85,15 +94,14 @@ async function fetchSnapshotFromNetwork(results = 20) {
   const data = await getJson(url.toString());
   const feeds = Array.isArray(data?.feeds) ? data.feeds : [];
 
-  // Per project requirements: ThingSpeak fields are fixed:
-  // field1 = Fill Level (%), field2 = Bin Status (0/1),
-  // field3 = Distance (cm), field4 = Waste Level (%)
-  const fieldMap = { fillLevel: "field1", binStatus: "field2", distance: "field3", wasteLevel: "field4" };
+  // Prefer the channel's field labels to avoid mismatches when fields are rearranged.
+  // Falls back to field1..field4 defaults if channel metadata is missing.
+  const fieldMap = resolveFieldMap(data?.channel);
 
   const history = feeds.map((feed, index) => mapFeedPoint(feed, index, fieldMap));
-  const latestRaw = getLastValidFeed(feeds);
+  const latestRaw = getLastValidFeed(feeds, fieldMap);
   const latest = mapLatestFeed(latestRaw, fieldMap);
-  const summary = computeSummaryFromHistory(history, latest);
+  const summary = computeSummaryFromHistory(history, latest, data?.channel?.last_entry_id);
 
   return {
     latest,
