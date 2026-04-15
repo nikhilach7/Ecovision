@@ -15,10 +15,13 @@ class Settings(BaseSettings):
     thingspeak_api_key: str = ""
     thingspeak_enabled: bool = False
     thingspeak_min_interval_seconds: int = 15
+    gemini_api_key: str = ""
+    groq_api_key: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        extra="ignore",
         protected_namespaces=("settings_",),
     )
 

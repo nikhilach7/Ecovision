@@ -2,8 +2,13 @@ import { Activity, CheckCircle2, Database, Recycle } from "lucide-react";
 import StatCard from "../components/StatCard";
 import TrendLineChart from "../components/TrendLineChart";
 import WastePieChart from "../components/WastePieChart";
+import { useIoTData } from "../iot/IoTDataContext";
 
 export default function HomePage({ dashboard, offlineMode }) {
+  const { latest, summary, loading, error, hourlyWasteTrend } = useIoTData();
+  const trendData = hourlyWasteTrend?.length ? hourlyWasteTrend : dashboard?.daily_trend || [];
+  const distribution = dashboard?.distribution || { plastic: 0, metal: 0, organic: 0 };
+
   return (
     <section className="space-y-6">
       <div className="panel p-6 md:p-7">
@@ -41,37 +46,43 @@ export default function HomePage({ dashboard, offlineMode }) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <StatCard
           title="Total Waste"
-          value={dashboard.total_waste_items}
-          subtitle="Classified waste images"
+          value={`${Math.round((summary?.totalWaste ?? 0) * 100) / 100}`}
+          subtitle="Sum of last 20 readings"
           icon={Recycle}
           tone="green"
         />
+
         <StatCard
-          title="Pipeline Status"
-          value={offlineMode ? "Simulated" : "Live"}
-          subtitle="Sensor + AI feed"
+          title="Fill Level"
+          value={loading ? "..." : `${Math.round(Number(latest?.fillLevel) || 0)}%`}
+          subtitle="ThingSpeak field1"
           icon={Activity}
           tone="blue"
         />
+
         <StatCard
-          title="Database"
-          value={dashboard.cloud_provider || "MongoDB"}
-          subtitle="Storage and telemetry"
+          title="Bin Status"
+          value={summary?.binStatusText || "Normal 🟢"}
+          subtitle="ThingSpeak field2"
           icon={Database}
           tone="amber"
         />
+
+        <StatCard
+          title="Waste Level"
+          value={`${Math.round(summary?.wasteLevelLatest ?? 0)}%`}
+          subtitle="ThingSpeak field4"
+          icon={Recycle}
+          tone="green"
+        />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-1">
-          <WastePieChart distribution={dashboard.distribution} />
-        </div>
-        <div className="lg:col-span-2">
-          <TrendLineChart trend={dashboard.daily_trend} />
-        </div>
+      <div className="grid gap-5 xl:grid-cols-2">
+        <WastePieChart distribution={distribution} />
+        <TrendLineChart trend={trendData} />
       </div>
     </section>
   );
