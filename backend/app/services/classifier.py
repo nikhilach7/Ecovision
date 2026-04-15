@@ -25,14 +25,19 @@ class WasteClassifier:
 
     def load(self) -> None:
         if self.model_path.exists():
-            self.model = load_model(
-                self.model_path,
-                custom_objects={"preprocess_input": preprocess_input},
-                compile=False,
-            )
-            self.mode = "custom"
-            self._load_metadata()
-            return
+            try:
+                self.model = load_model(
+                    self.model_path,
+                    custom_objects={"preprocess_input": preprocess_input},
+                    compile=False,
+                )
+                self.mode = "custom"
+                self._load_metadata()
+                return
+            except Exception:
+                # If the project-trained model can't be deserialized (common when Keras versions differ),
+                # keep the service running by falling back to ImageNet-pretrained MobileNetV2.
+                self.model = None
 
         # If no project-trained model exists, use ImageNet-pretrained MobileNetV2.
         self.model = MobileNetV2(weights="imagenet")

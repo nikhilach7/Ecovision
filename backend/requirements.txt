@@ -12,6 +12,6 @@ pyserial==3.5
 python-dotenv==1.0.1
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.2.0
+bcrypt==3.2.2
 datasets==3.0.1
 groq==0.18.0
