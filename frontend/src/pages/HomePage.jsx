@@ -2,11 +2,12 @@ import { Activity, CheckCircle2, Database, Recycle } from "lucide-react";
 import StatCard from "../components/StatCard";
 import TrendLineChart from "../components/TrendLineChart";
 import WastePieChart from "../components/WastePieChart";
-import IoTCards from "../iot/IoTCards";
 import { useIoTData } from "../iot/IoTDataContext";
 
 export default function HomePage({ dashboard, offlineMode }) {
-  const { latest, summary, loading, error } = useIoTData();
+  const { latest, summary, loading, error, hourlyWasteTrend } = useIoTData();
+  const trendData = hourlyWasteTrend?.length ? hourlyWasteTrend : dashboard?.daily_trend || [];
+  const distribution = dashboard?.distribution || { plastic: 0, metal: 0, organic: 0 };
 
   return (
     <section className="space-y-6">
@@ -77,6 +78,11 @@ export default function HomePage({ dashboard, offlineMode }) {
           icon={Recycle}
           tone="green"
         />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-2">
+        <WastePieChart distribution={distribution} />
+        <TrendLineChart trend={trendData} />
       </div>
     </section>
   );
