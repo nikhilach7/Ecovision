@@ -72,8 +72,14 @@ python scripts/generate_sample_dataset.py
 python scripts/train_model.py
 ```
 
+If you already pasted your own dataset in class folders under:
+```text
+backend/data/<class_name>/*.jpg
+```
+the training script will use that dataset directly.
+
 ### Preferred: Use a TrashNet-style dataset
-If you want a more realistic training dataset, download TrashNet directly from Hugging Face and convert it into the raw folder used by this project.
+If you want a more realistic training dataset, download TrashNet directly from Hugging Face and keep the native TrashNet labels for transfer learning.
 
 Direct download command:
 ```powershell
@@ -87,16 +93,37 @@ This creates the raw folder here:
 backend/data/trashnet_raw/
 ```
 
-Then prepare the compact 3-class dataset used by this project:
+Then prepare the compact dataset used by this project:
 ```powershell
 python scripts/prepare_trashnet_dataset.py
 python scripts/train_model.py
 ```
 
-The project maps the raw dataset into these final classes:
+The model now uses MobileNetV2 transfer learning and learns the six TrashNet classes:
+- glass
+- paper
+- cardboard
+- plastic
+- metal
+- trash
+
+For the dashboard and alerts, the backend maps those labels into the project bins:
 - plastic -> plastic
 - metal -> metal
-- paper/cardboard/trash -> organic
+- glass, paper, cardboard, trash -> organic
+
+Training uses MobileNetV2 transfer learning and exports multiple artifacts:
+- `backend/model/waste_classifier.keras` (backend inference)
+- `backend/model/saved_model/` (TensorFlow SavedModel)
+- `backend/model/waste_classifier.tflite` (mobile inference)
+- `backend/model/waste_classifier.json` (class labels + bin mapping)
+- `backend/model/training_report.json` (validation metrics and confusion matrix)
+
+Quick local prediction checks after training:
+```powershell
+python scripts/predict_local.py path/to/image.jpg
+python scripts/predict_tflite.py path/to/image.jpg
+```
 
 If you want to use the exact Hugging Face API snippet, it is:
 ```python
@@ -162,6 +189,17 @@ docker compose ps
 ```powershell
 docker compose exec backend python scripts/generate_sample_dataset.py
 docker compose exec backend python scripts/train_model.py
+```
+
+If you already placed your dataset in `backend/data`, skip sample generation and run only:
+```powershell
+docker compose exec backend python scripts/train_model.py
+```
+
+To test predictions inside Docker after training:
+```powershell
+docker compose exec backend python scripts/predict_local.py /app/data/plastic/example.jpg
+docker compose exec backend python scripts/predict_tflite.py /app/data/plastic/example.jpg
 ```
 
 ### 4. Optional: Run Sensor Simulator in Container

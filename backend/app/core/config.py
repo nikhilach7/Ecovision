@@ -14,12 +14,12 @@ class Settings(BaseSettings):
     storage_backend: str = "local"
     thingspeak_api_key: str = ""
     thingspeak_enabled: bool = False
-    gemini_api_key: str = ""
+    thingspeak_min_interval_seconds: int = 15
 
     model_config = SettingsConfigDict(
-        env_file=".env", 
+        env_file=".env",
         env_file_encoding="utf-8",
-        protected_namespaces=("settings_",)
+        protected_namespaces=("settings_",),
     )
 
     @property
