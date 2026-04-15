@@ -7,6 +7,8 @@ from PIL import Image
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, decode_predictions, preprocess_input
 from tensorflow.keras.models import load_model
 
+from app.core.config import settings
+
 CLASS_NAMES: Final[list[str]] = ["plastic", "metal", "organic"]
 DEFAULT_IMAGE_LABELS: Final[list[str]] = ["glass", "paper", "cardboard", "plastic", "metal", "trash"]
 MODEL_METADATA_SUFFIX: Final[str] = ".json"
@@ -23,7 +25,11 @@ class WasteClassifier:
 
     def load(self) -> None:
         if self.model_path.exists():
-            self.model = load_model(self.model_path)
+            self.model = load_model(
+                self.model_path,
+                custom_objects={"preprocess_input": preprocess_input},
+                compile=False,
+            )
             self.mode = "custom"
             self._load_metadata()
             return
@@ -92,7 +98,6 @@ class WasteClassifier:
         img = Image.open(file_path).convert("RGB")
         arr = np.array(img.resize((224, 224)), dtype=np.float32)
         arr = np.expand_dims(arr, axis=0)
-        arr = preprocess_input(arr)
 
         probs = self.model.predict(arr, verbose=0)[0]
         top_idx = int(np.argmax(probs))

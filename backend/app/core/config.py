@@ -16,7 +16,11 @@ class Settings(BaseSettings):
     thingspeak_enabled: bool = False
     thingspeak_min_interval_seconds: int = 15
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        protected_namespaces=("settings_",),
+    )
 
     @property
     def cors_origins_list(self) -> list[str]:
