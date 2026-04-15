@@ -2,8 +2,12 @@ import { Activity, CheckCircle2, Database, Recycle } from "lucide-react";
 import StatCard from "../components/StatCard";
 import TrendLineChart from "../components/TrendLineChart";
 import WastePieChart from "../components/WastePieChart";
+import IoTCards from "../iot/IoTCards";
+import { useIoTData } from "../iot/IoTDataContext";
 
 export default function HomePage({ dashboard, offlineMode }) {
+  const { latest, summary, loading, error } = useIoTData();
+
   return (
     <section className="space-y-6">
       <div className="panel p-6 md:p-7">
@@ -41,28 +45,21 @@ export default function HomePage({ dashboard, offlineMode }) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard
-          title="Total Waste"
-          value={dashboard.total_waste_items}
-          subtitle="Classified waste images"
-          icon={Recycle}
-          tone="green"
-        />
-        <StatCard
-          title="Pipeline Status"
-          value={offlineMode ? "Simulated" : "Live"}
-          subtitle="Sensor + AI feed"
-          icon={Activity}
-          tone="blue"
-        />
-        <StatCard
-          title="Database"
-          value={dashboard.cloud_provider || "MongoDB"}
-          subtitle="Storage and telemetry"
-          icon={Database}
-          tone="amber"
-        />
+      <div className="grid gap-4 md:grid-cols-4">
+        <StatCard title="Total Waste" value={`${Math.round((summary?.totalWaste ?? 0) * 100) / 100}`} subtitle="Sum of last 20 readings" icon={Recycle} tone="green" />
+        <StatCard title="Fill Level" value={`${Math.round(latest?.fillLevel ?? 0)}%`} subtitle="ThingSpeak field1" icon={Activity} tone="blue" />
+        <StatCard title="Bin Status" value={summary?.binStatusText || "Normal 🟢"} subtitle="ThingSpeak field2" icon={Database} tone="amber" />
+        <StatCard title="Waste Level" value={`${Math.round(summary?.wasteLevelLatest ?? 0)}%`} subtitle="ThingSpeak field4" icon={Recycle} tone="green" />
+      </div>
+
+      <div className="space-y-3">
+        <div className="panel p-4 md:p-5">
+          <h3 className="font-title text-xl font-semibold text-[var(--text-main)]">IoT Summary</h3>
+          <p className="mt-1 text-sm text-[var(--text-soft)]">
+            Live ThingSpeak snapshot from smart bin telemetry.
+          </p>
+        </div>
+        <IoTCards latest={latest} summary={summary} loading={loading} error={error} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

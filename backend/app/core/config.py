@@ -15,11 +15,13 @@ class Settings(BaseSettings):
     thingspeak_api_key: str = ""
     thingspeak_enabled: bool = False
     gemini_api_key: str = ""
+    groq_api_key: str = ""
 
     model_config = SettingsConfigDict(
-        env_file=".env", 
+        env_file=".env",
         env_file_encoding="utf-8",
-        protected_namespaces=("settings_",)
+        extra="ignore",
+        protected_namespaces=("settings_",),
     )
 
     @property

@@ -7,6 +7,7 @@ import HomePage from "./pages/HomePage";
 import MonitoringPage from "./pages/MonitoringPage";
 import { clearAuthToken, fetchDashboard, getAuthToken, getCurrentUser, login, register, setAuthToken } from "./services/api";
 import { mockDashboard } from "./utils/mockData";
+import { IoTDataProvider } from "./iot/IoTDataContext";
 
 export default function App() {
   const [activePage, setActivePage] = useState("home");
@@ -119,7 +120,7 @@ export default function App() {
               </div>
             )}
 
-            {renderPage()}
+            <IoTDataProvider refreshMs={5000}>{renderPage()}</IoTDataProvider>
           </div>
         </div>
 

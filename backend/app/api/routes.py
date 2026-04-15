@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from app.core.config import settings
 from app.core.database import get_database
 from app.core.security import get_current_user
-from app.models.schemas import DashboardStats, NLPQueryRequest, NLPQueryResponse, PredictionResponse, SensorPayload, SensorRecord
+from app.models.schemas import ChatRequest, ChatResponse, DashboardStats, NLPQueryRequest, NLPQueryResponse, PredictionResponse, SensorPayload, SensorRecord
 from app.services.analytics import clamp_fill_percentage, day_bounds
 from app.services.classifier import classifier
 from app.services.cloud_storage import upload_image_to_gridfs
@@ -166,3 +166,10 @@ async def dashboard(current_user=Depends(get_current_user), db=Depends(get_datab
 async def query_nlp(payload: NLPQueryRequest, current_user=Depends(get_current_user), db=Depends(get_database)):
     answer, intent = await nlp_service.answer(db, payload.query)
     return NLPQueryResponse(answer=answer, intent=intent)
+
+
+@router.post("/chat", response_model=ChatResponse)
+async def chat(payload: ChatRequest, current_user=Depends(get_current_user), db=Depends(get_database)):
+    _ = (current_user, db)
+    reply = await nlp_service.chat(payload.message)
+    return ChatResponse(reply=reply)

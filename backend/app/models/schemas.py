@@ -40,6 +40,14 @@ class NLPQueryResponse(BaseModel):
     intent: str
 
 
+class ChatRequest(BaseModel):
+    message: str
+
+
+class ChatResponse(BaseModel):
+    reply: str
+
+
 class DashboardStats(BaseModel):
     total_waste_items: int
     distribution: dict[str, int]
