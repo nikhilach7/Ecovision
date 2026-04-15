@@ -185,41 +185,30 @@ docker compose up --build -d
 docker compose ps
 ```
 
-### 3. Optional: Train Model Inside Backend Container
+### 3. Model and Sensor Script Workflow
+The Docker backend image is runtime-focused and does not include `backend/scripts` or `backend/data`.
+
+Use scripts from local setup when you want to train or simulate sensors:
 ```powershell
-docker compose exec backend python scripts/generate_sample_dataset.py
-docker compose exec backend python scripts/train_model.py
+cd backend
+.\.venv\Scripts\Activate.ps1
+python scripts/train_model.py
+python scripts/sensor_simulator.py
 ```
 
-If you already placed your dataset in `backend/data`, skip sample generation and run only:
-```powershell
-docker compose exec backend python scripts/train_model.py
-```
+Trained model files are stored in `backend/model` and are mounted into the backend container.
 
-To test predictions inside Docker after training:
-```powershell
-docker compose exec backend python scripts/predict_local.py /app/data/plastic/example.jpg
-docker compose exec backend python scripts/predict_tflite.py /app/data/plastic/example.jpg
-```
-
-### 4. Optional: Run Sensor Simulator in Container
-```powershell
-docker compose exec backend python scripts/sensor_simulator.py
-```
-
-If ThingSpeak is enabled in the container env, field1-field4 are updated there too.
-
-### 5. Open App
+### 4. Open App
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8000/api
 - Health: http://localhost:8000/api/health
 
-### 6. Stop Services
+### 5. Stop Services
 ```powershell
 docker compose down
 ```
 
-### 7. Clean Reset (remove volumes)
+### 6. Clean Reset (remove volumes)
 ```powershell
 docker compose down -v
 ```

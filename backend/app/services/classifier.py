@@ -4,8 +4,11 @@ from typing import Final
 
 import numpy as np
 from PIL import Image
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, decode_predictions, preprocess_input
-from tensorflow.keras.models import load_model
+
+try:
+    from tflite_runtime.interpreter import Interpreter as TFLiteInterpreter
+except ImportError:  # pragma: no cover - optional runtime dependency
+    TFLiteInterpreter = None
 
 from app.core.config import settings
 
@@ -19,31 +22,82 @@ class WasteClassifier:
         self.model_path = Path(model_path)
         self.metadata_path = self.model_path.with_suffix(MODEL_METADATA_SUFFIX)
         self.model = None
+        self.interpreter = None
+        self.input_details: dict[str, object] | None = None
+        self.output_details: dict[str, object] | None = None
         self.mode = "custom"
         self.class_names: list[str] = []
         self.bin_mapping: dict[str, str] = {}
+        self._preprocess_input = None
+        self._decode_predictions = None
 
     def load(self) -> None:
+        if self.model_path.suffix.lower() == ".tflite" and self.model_path.exists():
+            if TFLiteInterpreter is not None:
+                self._load_tflite_model()
+                self._load_metadata()
+                return
+            fallback_keras_path = self.model_path.with_suffix(".keras")
+            if fallback_keras_path.exists():
+                self.model_path = fallback_keras_path
+                self.metadata_path = self.model_path.with_suffix(MODEL_METADATA_SUFFIX)
+                self._load_keras_model()
+                self.mode = "custom"
+                self._load_metadata()
+                return
+
         if self.model_path.exists():
             try:
-                self.model = load_model(
-                    self.model_path,
-                    custom_objects={"preprocess_input": preprocess_input},
-                    compile=False,
-                )
+                self._load_keras_model()
                 self.mode = "custom"
                 self._load_metadata()
                 return
             except Exception:
-                # If the project-trained model can't be deserialized (common when Keras versions differ),
-                # keep the service running by falling back to ImageNet-pretrained MobileNetV2.
+                # If the project-trained model can't be deserialized, try the exported TFLite model first.
                 self.model = None
 
+        tflite_path = self.model_path.with_suffix(".tflite")
+        if tflite_path.exists() and TFLiteInterpreter is not None:
+            self.model_path = tflite_path
+            self.metadata_path = self.model_path.with_suffix(MODEL_METADATA_SUFFIX)
+            self._load_tflite_model()
+            self._load_metadata()
+            return
+
         # If no project-trained model exists, use ImageNet-pretrained MobileNetV2.
-        self.model = MobileNetV2(weights="imagenet")
+        self._load_imagenet_model()
         self.mode = "imagenet"
         self.class_names = list(DEFAULT_IMAGE_LABELS)
         self.bin_mapping = {label: self._map_imagenet_label_to_waste(label) for label in self.class_names}
+
+    def _load_keras_model(self) -> None:
+        from tensorflow.keras.applications.mobilenet_v2 import decode_predictions, preprocess_input
+        from tensorflow.keras.models import load_model
+
+        self._preprocess_input = preprocess_input
+        self._decode_predictions = decode_predictions
+        self.model = load_model(
+            self.model_path,
+            custom_objects={"preprocess_input": preprocess_input},
+            compile=False,
+        )
+
+    def _load_tflite_model(self) -> None:
+        if TFLiteInterpreter is None:
+            raise RuntimeError("tflite-runtime is not installed")
+
+        self.interpreter = TFLiteInterpreter(model_path=str(self.model_path))
+        self.interpreter.allocate_tensors()
+        self.input_details = dict(self.interpreter.get_input_details()[0])
+        self.output_details = dict(self.interpreter.get_output_details()[0])
+        self.mode = "tflite"
+
+    def _load_imagenet_model(self) -> None:
+        from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, decode_predictions, preprocess_input
+
+        self._preprocess_input = preprocess_input
+        self._decode_predictions = decode_predictions
+        self.model = MobileNetV2(weights="imagenet")
 
     def _load_metadata(self) -> None:
         if not self.metadata_path.exists():
@@ -96,6 +150,53 @@ class WasteClassifier:
             return "plastic"
         return "organic"
 
+    @staticmethod
+    def _dequantize(values: np.ndarray, details: dict[str, object]) -> np.ndarray:
+        quantization = details.get("quantization")
+        if not isinstance(quantization, tuple) or len(quantization) != 2:
+            return values.astype(np.float32)
+
+        scale, zero_point = quantization
+        scale = float(scale)
+        zero_point = float(zero_point)
+        if scale == 0.0:
+            return values.astype(np.float32)
+        return (values.astype(np.float32) - zero_point) * scale
+
+    def _predict_tflite_model(self, file_path: str) -> tuple[str, str, float]:
+        if self.interpreter is None or self.input_details is None or self.output_details is None:
+            raise RuntimeError("TFLite model not loaded")
+
+        img = Image.open(file_path).convert("RGB")
+        input_shape = self.input_details["shape"]
+        height = int(input_shape[1])
+        width = int(input_shape[2])
+        arr = np.array(img.resize((width, height)), dtype=np.float32)
+        arr = np.expand_dims(arr, axis=0)
+
+        input_dtype = self.input_details["dtype"]
+        if np.issubdtype(input_dtype, np.integer):
+            quantization = self.input_details.get("quantization")
+            if isinstance(quantization, tuple) and len(quantization) == 2:
+                scale, zero_point = quantization
+                scale = float(scale)
+                zero_point = float(zero_point)
+                if scale > 0:
+                    arr = arr / scale + zero_point
+            arr = np.clip(arr, np.iinfo(input_dtype).min, np.iinfo(input_dtype).max)
+        arr = arr.astype(input_dtype)
+
+        self.interpreter.set_tensor(self.input_details["index"], arr)
+        self.interpreter.invoke()
+
+        output = self.interpreter.get_tensor(self.output_details["index"])[0]
+        probs = self._dequantize(np.asarray(output), self.output_details)
+        top_idx = int(np.argmax(probs))
+        confidence = float(probs[top_idx])
+        predicted_label = self.class_names[top_idx] if top_idx < len(self.class_names) else CLASS_NAMES[top_idx % len(CLASS_NAMES)]
+        waste_type = self.bin_mapping.get(predicted_label, predicted_label)
+        return predicted_label, waste_type, confidence
+
     def _predict_trained_model(self, file_path: str) -> tuple[str, str, float]:
         if self.model is None:
             raise RuntimeError("Model not loaded")
@@ -112,18 +213,26 @@ class WasteClassifier:
         return predicted_label, waste_type, confidence
 
     def predict_image(self, file_path: str) -> tuple[str, str, float]:
-        if self.model is None:
+        if self.model is None and self.interpreter is None:
             raise RuntimeError("Model not loaded")
+
+        if self.mode == "tflite":
+            return self._predict_tflite_model(file_path)
 
         if self.mode == "imagenet":
             img = Image.open(file_path).convert("RGB")
             resized = img.resize((224, 224))
             arr = np.array(resized, dtype=np.float32)
             arr = np.expand_dims(arr, axis=0)
-            arr = preprocess_input(arr)
+            if self._preprocess_input is None or self._decode_predictions is None:
+                from tensorflow.keras.applications.mobilenet_v2 import decode_predictions, preprocess_input
+
+                self._preprocess_input = preprocess_input
+                self._decode_predictions = decode_predictions
+            arr = self._preprocess_input(arr)
 
             probs = self.model.predict(arr, verbose=0)
-            decoded = decode_predictions(probs, top=5)[0]
+            decoded = self._decode_predictions(probs, top=5)[0]
             # decoded tuples are (class_id, label, confidence)
             for _, label, conf in decoded:
                 mapped = self._map_imagenet_label_to_waste(label)
