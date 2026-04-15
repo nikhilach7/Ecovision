@@ -7,6 +7,33 @@ let cachedSnapshot = null;
 let cachedAt = 0;
 let inFlightPromise = null;
 
+function getLastValidFeed(feeds) {
+  if (!Array.isArray(feeds) || feeds.length === 0) {
+    return null;
+  }
+
+  for (let i = feeds.length - 1; i >= 0; i -= 1) {
+    const f = feeds[i];
+    if (!f) {
+      continue;
+    }
+
+    const fill = Number(f.field1);
+    const waste = Number(f.field4);
+    const distance = Number(f.field3);
+
+    // Define valid condition:
+    const isValid = !Number.isNaN(fill) && fill > 0 && !Number.isNaN(waste) && waste >= 0 && !Number.isNaN(distance);
+
+    if (isValid) {
+      return f;
+    }
+  }
+
+  // fallback if no valid found
+  return feeds.at(-1) ?? null;
+}
+
 function buildUrl(endpoint) {
   const channelId = import.meta.env.VITE_THINGSPEAK_CHANNEL_ID;
   const readApiKey = import.meta.env.VITE_THINGSPEAK_READ_API_KEY;
@@ -64,7 +91,7 @@ async function fetchSnapshotFromNetwork(results = 20) {
   const fieldMap = { fillLevel: "field1", binStatus: "field2", distance: "field3", wasteLevel: "field4" };
 
   const history = feeds.map((feed, index) => mapFeedPoint(feed, index, fieldMap));
-  const latestRaw = feeds.at(-1);
+  const latestRaw = getLastValidFeed(feeds);
   const latest = mapLatestFeed(latestRaw, fieldMap);
   const summary = computeSummaryFromHistory(history, latest);
 

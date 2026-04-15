@@ -34,7 +34,7 @@ export default function MonitoringPage({ dashboard }) {
         />
       </div>
 
-      <FillLevelCard fill={dashboard.latest_fill_percentage} location={dashboard.latest_location} />
+      <FillLevelCard fill={latest?.fillLevel ?? 0} location={dashboard.latest_location} />
 
       <div className="panel p-5">
         <h3 className="font-title text-xl font-semibold text-[var(--text-main)]">Live IoT Monitoring</h3>

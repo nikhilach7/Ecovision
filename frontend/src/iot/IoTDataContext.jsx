@@ -25,7 +25,7 @@ export function IoTDataProvider({ children, refreshMs = 5000 }) {
 
     const loadIoTData = async () => {
       try {
-        const snapshot = await fetchThingSpeakSnapshot({ results: 20 });
+        const snapshot = await fetchThingSpeakSnapshot({ results: 20, force: true });
         if (!isMounted) {
           return;
         }

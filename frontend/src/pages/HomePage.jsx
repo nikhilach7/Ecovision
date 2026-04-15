@@ -46,29 +46,37 @@ export default function HomePage({ dashboard, offlineMode }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <StatCard title="Total Waste" value={`${Math.round((summary?.totalWaste ?? 0) * 100) / 100}`} subtitle="Sum of last 20 readings" icon={Recycle} tone="green" />
-        <StatCard title="Fill Level" value={`${Math.round(latest?.fillLevel ?? 0)}%`} subtitle="ThingSpeak field1" icon={Activity} tone="blue" />
-        <StatCard title="Bin Status" value={summary?.binStatusText || "Normal 🟢"} subtitle="ThingSpeak field2" icon={Database} tone="amber" />
-        <StatCard title="Waste Level" value={`${Math.round(summary?.wasteLevelLatest ?? 0)}%`} subtitle="ThingSpeak field4" icon={Recycle} tone="green" />
-      </div>
+        <StatCard
+          title="Total Waste"
+          value={`${Math.round((summary?.totalWaste ?? 0) * 100) / 100}`}
+          subtitle="Sum of last 20 readings"
+          icon={Recycle}
+          tone="green"
+        />
 
-      <div className="space-y-3">
-        <div className="panel p-4 md:p-5">
-          <h3 className="font-title text-xl font-semibold text-[var(--text-main)]">IoT Summary</h3>
-          <p className="mt-1 text-sm text-[var(--text-soft)]">
-            Live ThingSpeak snapshot from smart bin telemetry.
-          </p>
-        </div>
-        <IoTCards latest={latest} summary={summary} loading={loading} error={error} />
-      </div>
+        <StatCard
+          title="Fill Level"
+          value={loading ? "..." : `${Math.round(Number(latest?.fillLevel) || 0)}%`}
+          subtitle="ThingSpeak field1"
+          icon={Activity}
+          tone="blue"
+        />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-1">
-          <WastePieChart distribution={dashboard.distribution} />
-        </div>
-        <div className="lg:col-span-2">
-          <TrendLineChart trend={dashboard.daily_trend} />
-        </div>
+        <StatCard
+          title="Bin Status"
+          value={summary?.binStatusText || "Normal 🟢"}
+          subtitle="ThingSpeak field2"
+          icon={Database}
+          tone="amber"
+        />
+
+        <StatCard
+          title="Waste Level"
+          value={`${Math.round(summary?.wasteLevelLatest ?? 0)}%`}
+          subtitle="ThingSpeak field4"
+          icon={Recycle}
+          tone="green"
+        />
       </div>
     </section>
   );

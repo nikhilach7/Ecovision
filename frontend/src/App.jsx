@@ -99,38 +99,42 @@ export default function App() {
   };
 
   return (
-    <main className="min-h-screen w-full bg-[var(--bg-main)] text-[var(--text-main)]">
-      <div className="flex min-h-screen flex-col">
-        <TopNavbar
-          userName={user?.full_name || "Operator"}
-          offlineMode={offlineMode}
-          location={dashboard.latest_location}
-          onLogout={handleLogout}
-          onThemeToggle={toggleTheme}
-          theme={theme}
-          activePage={activePage}
-          onNavigate={setActivePage}
-        />
-
-        <div className="flex-1 px-4 py-5 md:px-6 md:py-6 xl:px-8">
-          <div className="mx-auto w-full max-w-[1400px]">
-            {offlineMode && (
-              <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
-                Backend/hardware not reachable. Showing demo fallback data.
-              </div>
-            )}
-
-            <IoTDataProvider refreshMs={5000}>{renderPage()}</IoTDataProvider>
+    <IoTDataProvider refreshMs={5000}>
+      <main className="min-h-screen w-full bg-[var(--bg-main)] text-[var(--text-main)]">
+        <div className="flex min-h-screen flex-col">
+          <TopNavbar
+            userName={user?.full_name || "Operator"}
+            offlineMode={offlineMode}
+            location={dashboard.latest_location}
+            onLogout={handleLogout}
+            onThemeToggle={toggleTheme}
+            theme={theme}
+            activePage={activePage}
+            onNavigate={setActivePage}
+          />
+  
+          <div className="flex-1 px-4 py-5 md:px-6 md:py-6 xl:px-8">
+            <div className="mx-auto w-full max-w-[1400px]">
+              {offlineMode && (
+                <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
+                  Backend/hardware not reachable. Showing demo fallback data.
+                </div>
+              )}
+  
+              {renderPage()}
+            </div>
           </div>
+  
+          <footer className="border-t border-[var(--line)] bg-[var(--topbar-bg)]/88 px-4 py-3 text-sm text-[var(--text-soft)] md:px-6">
+            <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-2">
+              <span>EcoVision AI</span>
+              <span className="text-xs text-[var(--text-muted)]">
+                Smart waste monitoring and classification dashboard
+              </span>
+            </div>
+          </footer>
         </div>
-
-        <footer className="border-t border-[var(--line)] bg-[var(--topbar-bg)]/88 px-4 py-3 text-sm text-[var(--text-soft)] md:px-6">
-          <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-2">
-            <span>EcoVision AI</span>
-            <span className="text-xs text-[var(--text-muted)]">Smart waste monitoring and classification dashboard</span>
-          </div>
-        </footer>
-      </div>
-    </main>
+      </main>
+    </IoTDataProvider>
   );
 }
